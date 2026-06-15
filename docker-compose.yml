@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sekar_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-sekar}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sekar_secret}
+      POSTGRES_DB: ${DB_NAME:-sekar_employees}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-sekar} -d ${DB_NAME:-sekar_employees}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${DB_PORT_EXPOSED:-5432}:5432"
+
+  app:
+    build: ./backend
+    container_name: sekar_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-sekar}
+      DB_PASSWORD: ${DB_PASSWORD:-sekar_secret}
+      DB_NAME: ${DB_NAME:-sekar_employees}
+      JWT_SECRET: ${JWT_SECRET:-please-change-this-secret}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrator}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sekarandco.in}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      UPLOAD_DIR: /app/uploads
+      # Google Sheets (optional)
+      GOOGLE_SHEETS_ENABLED: ${GOOGLE_SHEETS_ENABLED:-false}
+      GOOGLE_SHEET_ID: ${GOOGLE_SHEET_ID:-}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${GOOGLE_SERVICE_ACCOUNT_JSON:-}
+      GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${GOOGLE_SERVICE_ACCOUNT_JSON_BASE64:-}
+      # Set to 'true' only if serving over plain HTTP in production behind no TLS
+      FORCE_INSECURE_COOKIE: ${FORCE_INSECURE_COOKIE:-true}
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+volumes:
+  db_data:
+  uploads_data:

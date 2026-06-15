@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee Details Form · Sekar & Co</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <span class="logo">⚡</span>
+        <div>
+          <h1>SEKAR &amp; CO</h1>
+          <p class="tagline">Electricals · Plumbing · Paints</p>
+        </div>
+      </a>
+      <div class="header-spacer"></div>
+      <nav class="header-nav" id="headerNav">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h2 style="margin-top:0">Employee Details Form</h2>
+      <p class="muted">Please complete all applicable sections. Fields marked <span style="color:var(--danger)">*</span> are required.</p>
+    </div>
+
+    <div id="msg"></div>
+
+    <form id="empForm">
+      <!-- Section 1 -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">1</span> Personal Information</div>
+        <div class="grid">
+          <div class="field full">
+            <label>Full Name <span class="req">*</span></label>
+            <input type="text" name="full_name" required />
+          </div>
+          <div class="field">
+            <label>Date of Birth</label>
+            <input type="date" name="date_of_birth" />
+          </div>
+          <div class="field">
+            <label>Blood Group</label>
+            <select name="blood_group">
+              <option value="">— Select —</option>
+              <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+              <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Gender</label>
+            <div class="radio-group">
+              <label><input type="radio" name="gender" value="Male" /> Male</label>
+              <label><input type="radio" name="gender" value="Female" /> Female</label>
+              <label><input type="radio" name="gender" value="Other" /> Other</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Marital Status</label>
+            <div class="radio-group">
+              <label><input type="radio" name="marital_status" value="Single" /> Single</label>
+              <label><input type="radio" name="marital_status" value="Married" /> Married</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Personal Phone No</label>
+            <input type="tel" name="personal_phone" />
+          </div>
+          <div class="field">
+            <label>Email ID</label>
+            <input type="email" name="email" />
+          </div>
+          <div class="field full">
+            <label>Permanent Address</label>
+            <textarea name="permanent_address"></textarea>
+          </div>
+          <div class="field">
+            <label>Passport Size Photograph</label>
+            <input type="file" name="photo" accept="image/*" />
+            <span class="hint">JPG / PNG / WEBP, max 5 MB.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2 -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">2</span> Employment &amp; Joining Details</div>
+        <div class="grid">
+          <div class="field"><label>Designation</label><input type="text" name="designation" /></div>
+          <div class="field"><label>Division</label><input type="text" name="division" /></div>
+          <div class="field"><label>Joining Month/Year</label><input type="text" name="joining_month_year" placeholder="e.g. June 2026" /></div>
+          <div class="field"><label>Reporting To (Manager)</label><input type="text" name="reporting_to" /></div>
+          <div class="field"><label>Referenced By</label><input type="text" name="referenced_by" /></div>
+          <div class="field"><label>Reference Phone No</label><input type="tel" name="reference_phone" /></div>
+        </div>
+      </div>
+
+      <!-- Section 3 -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">3</span> Identity &amp; Statutory Details</div>
+        <div class="grid">
+          <div class="field"><label>PAN Card No</label><input type="text" name="pan_card_no" /></div>
+          <div class="field"><label>Aadhaar Card No</label><input type="text" name="aadhaar_card_no" /></div>
+          <div class="field">
+            <label>ESI Applicable</label>
+            <div class="radio-group">
+              <label><input type="radio" name="esi_applicable" value="true" /> Yes</label>
+              <label><input type="radio" name="esi_applicable" value="false" checked /> No</label>
+            </div>
+          </div>
+          <div class="field"><label>ESI No (if Yes)</label><input type="text" name="esi_no" /></div>
+          <div class="field"><label>Proof Submitted 1</label><input type="text" name="proof_1" /></div>
+          <div class="field"><label>Proof Submitted 2</label><input type="text" name="proof_2" /></div>
+        </div>
+      </div>
+
+      <!-- Section 4 -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">4</span> Emergency Contact Information</div>
+        <div class="grid">
+          <div class="field"><label>Emergency Contact Person</label><input type="text" name="emergency_contact_person" /></div>
+          <div class="field"><label>Relationship</label><input type="text" name="emergency_relationship" /></div>
+          <div class="field"><label>Emergency Contact No</label><input type="tel" name="emergency_contact_no" /></div>
+        </div>
+      </div>
+
+      <!-- Section 5 -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">5</span> Educational Qualifications</div>
+        <div class="grid">
+          <div class="field"><label>Highest Educational Qualification</label><input type="text" name="highest_qualification" /></div>
+          <div class="field"><label>Name of College/Institution</label><input type="text" name="college_name" /></div>
+          <div class="field"><label>College Location</label><input type="text" name="college_location" /></div>
+          <div class="field"><label>Name of School</label><input type="text" name="school_name" /></div>
+          <div class="field"><label>School Location</label><input type="text" name="school_location" /></div>
+        </div>
+      </div>
+
+      <!-- Section 6 -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">6</span> Previous Work Information <span class="hint" style="font-weight:400;margin-left:6px">(Not applicable for freshers)</span></div>
+        <div class="grid">
+          <div class="field"><label>Name of the Organization</label><input type="text" name="prev_organization" /></div>
+          <div class="field"><label>Position Held</label><input type="text" name="prev_position" /></div>
+          <div class="field"><label>Salary Drawn</label><input type="text" name="prev_salary" /></div>
+          <div class="field"><label>Employment Period — From</label><input type="text" name="prev_period_from" placeholder="e.g. Jan 2022" /></div>
+          <div class="field"><label>Employment Period — To</label><input type="text" name="prev_period_to" placeholder="e.g. Mar 2025" /></div>
+          <div class="field full"><label>Reason for Leaving</label><textarea name="prev_reason_for_leaving"></textarea></div>
+          <div class="field"><label>Previous Company Contact Name</label><input type="text" name="prev_contact_name" /></div>
+          <div class="field"><label>Contact Position</label><input type="text" name="prev_contact_position" /></div>
+          <div class="field"><label>Contact Number</label><input type="tel" name="prev_contact_number" /></div>
+        </div>
+      </div>
+
+      <!-- Section 7 -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">7</span> Medical Record</div>
+        <div class="grid">
+          <div class="field">
+            <label>Operations</label>
+            <div class="radio-group">
+              <label><input type="radio" name="medical_operations" value="true" /> Yes</label>
+              <label><input type="radio" name="medical_operations" value="false" checked /> No</label>
+            </div>
+            <input class="detail-input hidden" type="text" name="medical_operations_detail" placeholder="If any, specify" data-detail-for="medical_operations" />
+          </div>
+          <div class="field">
+            <label>Allergies</label>
+            <div class="radio-group">
+              <label><input type="radio" name="medical_allergies" value="true" /> Yes</label>
+              <label><input type="radio" name="medical_allergies" value="false" checked /> No</label>
+            </div>
+            <input class="detail-input hidden" type="text" name="medical_allergies_detail" placeholder="If any, specify" data-detail-for="medical_allergies" />
+          </div>
+          <div class="field">
+            <label>Regular Medication</label>
+            <div class="radio-group">
+              <label><input type="radio" name="medical_medication" value="true" /> Yes</label>
+              <label><input type="radio" name="medical_medication" value="false" checked /> No</label>
+            </div>
+            <input class="detail-input hidden" type="text" name="medical_medication_detail" placeholder="If any, specify" data-detail-for="medical_medication" />
+          </div>
+          <div class="field">
+            <label>Specific Doctor/Consultant</label>
+            <div class="radio-group">
+              <label><input type="radio" name="medical_doctor" value="true" /> Yes</label>
+              <label><input type="radio" name="medical_doctor" value="false" checked /> No</label>
+            </div>
+            <input class="detail-input hidden" type="text" name="medical_doctor_detail" placeholder="If any, specify" data-detail-for="medical_doctor" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 8 -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">8</span> Declaration</div>
+        <p class="muted" style="margin-top:0">
+          I hereby declare that the above information is true to the best of my knowledge and if found
+          incorrect I shall forfeit my employability and other benefits of the shop. I hereby also give my
+          full consent to submit my certificate and shall inform my relieving before 3 months of leaving the job.
+        </p>
+        <div class="grid">
+          <div class="field"><label>Certificate Submitted (type)</label><input type="text" name="declaration_certificate" placeholder="e.g. Degree / Diploma" /></div>
+          <div class="field"><label>Place</label><input type="text" name="declaration_place" /></div>
+          <div class="field"><label>Date</label><input type="date" name="declaration_date" /></div>
+          <div class="field"><label>Signature (type full name)</label><input type="text" name="declaration_signature" /></div>
+          <div class="field full">
+            <label class="check-row" style="font-weight:600">
+              <input type="checkbox" name="declaration_consent" value="true" required />
+              I agree to the above declaration. <span class="req">*</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card center">
+        <button type="submit" class="btn btn-primary" id="submitBtn" style="min-width:220px">Submit Employee Details</button>
+      </div>
+    </form>
+  </main>
+
+  <footer class="site-footer"><div class="footer-inner" id="footer"></div></footer>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/form.js"></script>
+</body>
+</html>

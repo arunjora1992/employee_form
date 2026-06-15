@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login · Sekar & Co Employee Portal</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <span class="logo">⚡</span>
+        <div>
+          <h1>SEKAR &amp; CO</h1>
+          <p class="tagline">Electricals · Plumbing · Paints</p>
+        </div>
+      </a>
+      <div class="header-spacer"></div>
+      <nav class="header-nav" id="headerNav">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="auth-wrap">
+    <div class="card auth-card">
+      <h2>Welcome back</h2>
+      <p class="muted">Sign in to fill the Employee Details Form.</p>
+      <div id="msg"></div>
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Sign In</button>
+      </form>
+      <p class="auth-switch">No account? <a href="/register.html">Create one</a></p>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    (async () => {
+      const user = await getCurrentUser();
+      if (user) { location.href = '/'; return; }
+    })();
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('msg');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.innerHTML = '';
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Signing in…';
+      try {
+        await api('/api/auth/login', {
+          method: 'POST',
+          body: { email: form.email.value.trim(), password: form.password.value },
+        });
+        location.href = '/';
+      } catch (err) {
+        msg.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
+        btn.disabled = false; btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

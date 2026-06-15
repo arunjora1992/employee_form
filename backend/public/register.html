@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register · Sekar & Co Employee Portal</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <span class="logo">⚡</span>
+        <div>
+          <h1>SEKAR &amp; CO</h1>
+          <p class="tagline">Electricals · Plumbing · Paints</p>
+        </div>
+      </a>
+      <div class="header-spacer"></div>
+      <nav class="header-nav" id="headerNav">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="auth-wrap">
+    <div class="card auth-card">
+      <h2>Create your account</h2>
+      <p class="muted">Register to submit your employee details.</p>
+      <div id="msg"></div>
+      <form id="registerForm">
+        <div class="field">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="new-password" minlength="6" required />
+          <span class="hint">At least 6 characters.</span>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Create Account</button>
+      </form>
+      <p class="auth-switch">Already registered? <a href="/login.html">Sign in</a></p>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    (async () => { if (await getCurrentUser()) location.href = '/'; })();
+    const form = document.getElementById('registerForm');
+    const msg = document.getElementById('msg');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.innerHTML = '';
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…';
+      try {
+        await api('/api/auth/register', {
+          method: 'POST',
+          body: {
+            name: form.name.value.trim(),
+            email: form.email.value.trim(),
+            password: form.password.value,
+          },
+        });
+        location.href = '/';
+      } catch (err) {
+        msg.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
+        btn.disabled = false; btn.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>
