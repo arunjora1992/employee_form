@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings · Sekar & Co Employee Portal</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <span class="logo">⚡</span>
+        <div>
+          <h1>SEKAR &amp; CO</h1>
+          <p class="tagline">Admin · Settings</p>
+        </div>
+      </a>
+      <div class="header-spacer"></div>
+      <nav class="header-nav" id="headerNav">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h2 style="margin-top:0">Customization &amp; Settings</h2>
+      <p class="muted">Changes apply across the whole portal (header, footer, theme colors).</p>
+    </div>
+
+    <div id="msg"></div>
+
+    <form id="settingsForm">
+      <!-- Branding -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">⚙</span> Branding</div>
+        <div class="grid">
+          <div class="field"><label>Shop Name</label><input type="text" name="shopName" /></div>
+          <div class="field"><label>Tagline</label><input type="text" name="tagline" /></div>
+          <div class="field full"><label>Footer Note (product line)</label><input type="text" name="footerNote" /></div>
+          <div class="field">
+            <label>Primary / Accent Color</label>
+            <input type="color" name="primaryColor" style="height:44px;padding:4px" />
+          </div>
+          <div class="field">
+            <label>Header Color</label>
+            <input type="color" name="headerColor" style="height:44px;padding:4px" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Logo -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">🖼</span> Logo</div>
+        <div class="grid">
+          <div class="field">
+            <label>Logo Image (overrides the emoji)</label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <span class="logo" id="logoPreview" style="width:54px;height:54px;border-radius:10px;display:grid;place-items:center;background:var(--amber);font-size:28px"></span>
+              <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+            </div>
+            <span class="hint">PNG / JPG / WEBP / SVG, max 2 MB. Uploads immediately.</span>
+          </div>
+          <div class="field">
+            <label>Fallback Emoji (used when no image)</label>
+            <input type="text" name="logoEmoji" maxlength="4" style="max-width:90px;font-size:22px;text-align:center" />
+            <button type="button" class="btn btn-sm btn-secondary" id="removeLogo" style="margin-top:8px;align-self:flex-start">Remove uploaded logo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Head Office -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">🏢</span> Head Office</div>
+        <div class="grid">
+          <div class="field"><label>Label</label><input type="text" name="ho_label" /></div>
+          <div class="field"><label>Email</label><input type="text" name="ho_email" /></div>
+          <div class="field full"><label>Address</label><textarea name="ho_address"></textarea></div>
+          <div class="field full"><label>Phone Numbers (comma separated)</label><input type="text" name="ho_phones" /></div>
+        </div>
+      </div>
+
+      <!-- Branch -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">🏬</span> Branch Office</div>
+        <div class="grid">
+          <div class="field"><label>Label</label><input type="text" name="br_label" /></div>
+          <div class="field"><label>Email</label><input type="text" name="br_email" /></div>
+          <div class="field full"><label>Address</label><textarea name="br_address"></textarea></div>
+          <div class="field full"><label>Phone Numbers (comma separated)</label><input type="text" name="br_phones" /></div>
+        </div>
+      </div>
+
+      <!-- General emails -->
+      <div class="card form-section">
+        <div class="section-title"><span class="num">✉</span> General Emails</div>
+        <div class="field full"><label>Emails (comma separated)</label><input type="text" name="emails" /></div>
+      </div>
+
+      <div class="card center">
+        <button type="submit" class="btn btn-primary" id="saveBtn" style="min-width:200px">Save Settings</button>
+        <a href="/admin" class="btn btn-secondary" style="margin-left:8px">Back to Admin</a>
+      </div>
+    </form>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/settings.js"></script>
+</body>
+</html>

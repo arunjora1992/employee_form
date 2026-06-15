@@ -11,6 +11,11 @@ search and review every record.
 ## Features
 
 - 🔐 **User authentication** (register / login) — credentials stored in PostgreSQL, passwords hashed with bcrypt, JWT session cookie.
+- 👥 **Role-based access & user management** — three privileges:
+  - **Admin** — full access (records, user management, settings, delete, export).
+  - **Read-only / Viewer** — can only **view & export** records; cannot edit, delete, submit, or change settings.
+  - **Employee** — fills and submits the Employee Details Form.
+  Admins create and manage accounts (assign roles, reset passwords) from a **Users** page.
 - 📝 **Full 8-section Employee Details Form** matching the official PDF:
   1. Personal Information (with passport photo upload)
   2. Employment & Joining Details
@@ -21,9 +26,15 @@ search and review every record.
   7. Medical Record
   8. Declaration & consent
 - 🗄️ **Dual storage** — every submission is written to PostgreSQL **and** appended to a Google Sheet (when configured).
-- 👨‍💼 **Admin dashboard** — searchable table, full-record detail view, photo preview, delete.
+- 👨‍💼 **Admin dashboard** — searchable table with profile-picture avatars, full-record detail view, photo preview, delete.
+- ⬇️ **Export to CSV & PDF** — both **bulk** (all/filtered records) and **individual** (single record), respecting the active search filter.
+- 🎨 **Customization / Settings page** — admins can change the **logo** (image upload or emoji), **shop name**, **tagline**, **accent & header colors**, **footer note**, and all **contact details** (head office, branch, emails). Changes apply live across the portal.
+- 🖼️ **Browser tab icon** (PNG favicon) included.
+- 🔗 **Clean named URLs** — `/login`, `/register`, `/admin`, `/users`, `/settings` (no `.html`).
 - 🌗 **Light & Dark theme** toggle (remembers your choice, respects OS preference).
+- 📱 **Mobile-optimized** responsive layout (adaptive header, scrollable tables, no iOS input zoom).
 - 🎨 Electricals / plumbing-construction visual theme with live shop contact details pulled from sekarandco.com.
+- 🌱 **Demo data** — two sample employees seeded on first boot (toggle with `SEED_DEMO`).
 - 🐳 **Docker Compose** deployment (app + PostgreSQL), one command to run.
 
 ## Tech stack
@@ -116,18 +127,30 @@ each submission into a Google Sheet:
 
 ## API reference
 
-| Method | Endpoint                | Auth   | Description                          |
-|--------|-------------------------|--------|--------------------------------------|
-| POST   | `/api/auth/register`    | —      | Create a user account                |
-| POST   | `/api/auth/login`       | —      | Login, sets session cookie           |
-| POST   | `/api/auth/logout`      | —      | Clear session                        |
-| GET    | `/api/auth/me`          | user   | Current user                         |
-| POST   | `/api/employees`        | user   | Submit an employee form (multipart)  |
-| GET    | `/api/employees`        | admin  | List/search all records              |
-| GET    | `/api/employees/:id`    | admin  | Single record                        |
-| DELETE | `/api/employees/:id`    | admin  | Delete a record                      |
-| GET    | `/api/config`           | —      | Shop branding + contact details      |
-| GET    | `/api/health`           | —      | Health check                         |
+| Method | Endpoint                          | Auth          | Description                              |
+|--------|-----------------------------------|---------------|------------------------------------------|
+| POST   | `/api/auth/register`              | —             | Create a user account (role `user`)      |
+| POST   | `/api/auth/login`                 | —             | Login, sets session cookie               |
+| POST   | `/api/auth/logout`                | —             | Clear session                            |
+| GET    | `/api/auth/me`                    | any           | Current user                             |
+| POST   | `/api/employees`                  | admin, user   | Submit an employee form (multipart)      |
+| GET    | `/api/employees`                  | admin, viewer | List/search all records                  |
+| GET    | `/api/employees/:id`              | admin, viewer | Single record                            |
+| DELETE | `/api/employees/:id`              | admin         | Delete a record                          |
+| GET    | `/api/employees/export/csv`       | admin, viewer | Bulk CSV (honors `?search=`)             |
+| GET    | `/api/employees/export/pdf`       | admin, viewer | Bulk PDF (honors `?search=`)             |
+| GET    | `/api/employees/:id/export/csv`   | admin, viewer | Individual record CSV                    |
+| GET    | `/api/employees/:id/export/pdf`   | admin, viewer | Individual record PDF                    |
+| GET    | `/api/users`                      | admin         | List user accounts                       |
+| POST   | `/api/users`                      | admin         | Create a user with a role                |
+| PATCH  | `/api/users/:id`                  | admin         | Change role / reset password             |
+| DELETE | `/api/users/:id`                  | admin         | Delete a user                            |
+| GET    | `/api/settings`                   | admin         | Read full customization config           |
+| PUT    | `/api/settings`                   | admin         | Update branding / contact details        |
+| POST   | `/api/settings/logo`              | admin         | Upload a logo image                      |
+| DELETE | `/api/settings/logo`              | admin         | Remove uploaded logo                     |
+| GET    | `/api/config`                     | —             | Public branding + contact details        |
+| GET    | `/api/health`                     | —             | Health check                             |
 
 ---
 
@@ -155,19 +178,28 @@ each submission into a Google Sheet:
     ├── Dockerfile
     ├── package.json
     ├── src/
-    │   ├── server.js           # express app + static hosting
+    │   ├── server.js           # express app, named routes, static hosting
     │   ├── db.js               # pg pool + readiness wait
-    │   ├── auth.js             # JWT, bcrypt, middleware, admin seed
+    │   ├── auth.js             # JWT, bcrypt, role middleware, admin seed
+    │   ├── migrate.js          # idempotent startup migrations
+    │   ├── settings.js         # DB-backed branding/customization config
+    │   ├── seed.js             # demo employee seeding
     │   ├── sheets.js           # Google Sheets mirror
+    │   ├── exporters.js        # CSV + PDF generation
     │   └── routes/
     │       ├── auth.js
-    │       └── employees.js
+    │       ├── employees.js    # CRUD + CSV/PDF export
+    │       ├── users.js        # user management (admin)
+    │       └── settings.js     # customization (admin)
     └── public/                 # frontend (served statically)
         ├── index.html          # employee form
         ├── login.html / register.html
-        ├── admin.html          # admin dashboard
-        ├── css/styles.css      # light + dark theme
-        └── js/{common,form,admin}.js
+        ├── admin.html          # records dashboard (admin + viewer)
+        ├── users.html          # user management (admin)
+        ├── settings.html       # customization (admin)
+        ├── favicon.png         # browser tab icon
+        ├── css/styles.css      # light + dark theme, responsive
+        └── js/{common,form,admin,users,settings}.js
 ```
 
 ---

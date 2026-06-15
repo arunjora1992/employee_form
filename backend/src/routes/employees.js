@@ -5,8 +5,27 @@ const multer = require('multer');
 const db = require('../db');
 const auth = require('../auth');
 const sheets = require('../sheets');
+const settings = require('../settings');
+const exporters = require('../exporters');
 
 const router = express.Router();
+
+// Shared query for admin listing/search/export
+async function fetchEmployees(search) {
+  const s = (search || '').trim();
+  if (s) {
+    const { rows } = await db.query(
+      `SELECT * FROM employees
+       WHERE lower(full_name) LIKE $1 OR lower(coalesce(email,'')) LIKE $1
+          OR lower(coalesce(designation,'')) LIKE $1 OR lower(coalesce(division,'')) LIKE $1
+       ORDER BY created_at DESC`,
+      [`%${s.toLowerCase()}%`]
+    );
+    return rows;
+  }
+  const { rows } = await db.query('SELECT * FROM employees ORDER BY created_at DESC');
+  return rows;
+}
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', '..', '..', 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -67,7 +86,7 @@ function buildValues(b, photoPath) {
 }
 
 // Create a new employee record (any authenticated user) ---------------------
-router.post('/', auth.requireAuth, upload.single('photo'), async (req, res) => {
+router.post('/', auth.requireRole('admin', 'user'), upload.single('photo'), async (req, res) => {
   try {
     const b = req.body || {};
     if (!b.full_name || !String(b.full_name).trim()) {
@@ -95,30 +114,74 @@ router.post('/', auth.requireAuth, upload.single('photo'), async (req, res) => {
 });
 
 // List employees (admin) ----------------------------------------------------
-router.get('/', auth.requireAdmin, async (req, res) => {
+router.get('/', auth.requireViewer, async (req, res) => {
   try {
-    const search = (req.query.search || '').trim();
-    let result;
-    if (search) {
-      result = await db.query(
-        `SELECT * FROM employees
-         WHERE lower(full_name) LIKE $1 OR lower(coalesce(email,'')) LIKE $1
-            OR lower(coalesce(designation,'')) LIKE $1 OR lower(coalesce(division,'')) LIKE $1
-         ORDER BY created_at DESC`,
-        [`%${search.toLowerCase()}%`]
-      );
-    } else {
-      result = await db.query('SELECT * FROM employees ORDER BY created_at DESC');
-    }
-    res.json({ employees: result.rows });
+    const employees = await fetchEmployees(req.query.search);
+    res.json({ employees });
   } catch (err) {
     console.error('List employees error:', err.message);
     res.status(500).json({ error: 'Could not load employees.' });
   }
 });
 
+// Bulk export (admin) — define BEFORE '/:id' so 'export' is not read as an id --
+router.get('/export/csv', auth.requireViewer, async (req, res) => {
+  try {
+    const employees = await fetchEmployees(req.query.search);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="employees.csv"');
+    res.send(exporters.toCSV(employees));
+  } catch (err) {
+    console.error('CSV export error:', err.message);
+    res.status(500).json({ error: 'Could not export CSV.' });
+  }
+});
+
+router.get('/export/pdf', auth.requireViewer, async (req, res) => {
+  try {
+    const employees = await fetchEmployees(req.query.search);
+    const cfg = await settings.getConfig();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="employees.pdf"');
+    exporters.streamListPDF(res, employees, cfg.shopName);
+  } catch (err) {
+    console.error('PDF export error:', err.message);
+    if (!res.headersSent) res.status(500).json({ error: 'Could not export PDF.' });
+  }
+});
+
+// Individual export (admin) -------------------------------------------------
+router.get('/:id/export/csv', auth.requireViewer, async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM employees WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Employee not found.' });
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition',
+      `attachment; filename="${exporters.safeFileName(rows[0].full_name)}.csv"`);
+    res.send(exporters.toCSV(rows));
+  } catch (err) {
+    console.error('CSV export error:', err.message);
+    res.status(500).json({ error: 'Could not export CSV.' });
+  }
+});
+
+router.get('/:id/export/pdf', auth.requireViewer, async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM employees WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Employee not found.' });
+    const cfg = await settings.getConfig();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition',
+      `attachment; filename="${exporters.safeFileName(rows[0].full_name)}.pdf"`);
+    exporters.streamEmployeePDF(res, rows[0], cfg.shopName);
+  } catch (err) {
+    console.error('PDF export error:', err.message);
+    if (!res.headersSent) res.status(500).json({ error: 'Could not export PDF.' });
+  }
+});
+
 // Single employee (admin) ---------------------------------------------------
-router.get('/:id', auth.requireAdmin, async (req, res) => {
+router.get('/:id', auth.requireViewer, async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM employees WHERE id = $1', [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Employee not found.' });

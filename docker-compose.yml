@@ -38,6 +38,8 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sekarandco.in}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       UPLOAD_DIR: /app/uploads
+      # Seed two demo employee records on first boot (only when table is empty)
+      SEED_DEMO: ${SEED_DEMO:-true}
       # Google Sheets (optional)
       GOOGLE_SHEETS_ENABLED: ${GOOGLE_SHEETS_ENABLED:-false}
       GOOGLE_SHEET_ID: ${GOOGLE_SHEET_ID:-}

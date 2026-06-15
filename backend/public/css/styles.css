@@ -84,8 +84,16 @@ html[data-theme='dark'] a { color: #7fb4e6; }
 .brand h1 { font-size: 1.25rem; margin: 0; letter-spacing: .5px; }
 .brand .tagline { font-size: .72rem; opacity: .85; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
 .header-spacer { flex: 1; }
-.header-nav { display: flex; align-items: center; gap: 8px; }
-.header-nav a, .header-nav button { color: var(--header-text); }
+.header-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+/* Header buttons keep their own button colors (do NOT force white text, or the
+   light-gray secondary buttons become unreadable in light theme). */
+.header-nav .btn-secondary {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--header-text);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+.header-nav .btn-secondary:hover { background: rgba(255, 255, 255, 0.26); }
+.header-user { color: var(--header-text); opacity: 0.9; margin: 0 4px; font-size: 0.85rem; }
 
 /* Theme toggle */
 .theme-toggle {
@@ -248,3 +256,46 @@ html[data-theme='dark'] .detail-grid .sub { color: var(--amber); }
 .muted { color: var(--text-muted); }
 .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,.5); border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------------- Mobile optimization ---------------- */
+html { -webkit-text-size-adjust: 100%; }
+img, table { max-width: 100%; }
+
+/* Tablets and below */
+@media (max-width: 768px) {
+  .header-inner { padding: 12px 14px; flex-wrap: wrap; gap: 10px; }
+  .brand h1 { font-size: 1.05rem; }
+  .brand .tagline { font-size: .62rem; letter-spacing: 1.5px; }
+  .header-spacer { flex-basis: 100%; height: 0; }
+  .header-nav { width: 100%; }
+  .container { padding: 16px 14px 48px; }
+  .card { padding: 18px; border-radius: 12px; }
+  .modal { padding: 18px; }
+  .toolbar input[type=text] { max-width: 100%; flex: 1 1 100%; }
+}
+
+/* Phones */
+@media (max-width: 480px) {
+  .brand .logo { width: 38px; height: 38px; font-size: 20px; }
+  .brand h1 { font-size: .98rem; letter-spacing: .3px; }
+  .section-title { font-size: .98rem; padding: 9px 12px; }
+  /* Prevent iOS auto-zoom on focus by keeping inputs at >=16px */
+  input[type=text], input[type=email], input[type=tel], input[type=password],
+  input[type=date], input[type=number], select, textarea { font-size: 16px; }
+  .header-nav { gap: 6px; }
+  .header-nav .btn-sm { padding: 7px 10px; font-size: .8rem; }
+  .header-user { width: 100%; order: -1; margin: 2px 0; }
+  /* Stack auth pages comfortably */
+  .auth-wrap { padding: 18px 12px; min-height: auto; }
+  /* Admin table: let it scroll horizontally without squashing */
+  table { min-width: 640px; }
+  th, td { padding: 9px 10px; }
+  /* Export/refresh buttons wrap neatly */
+  .toolbar { gap: 8px; }
+  .toolbar .spacer { display: none; }
+  .modal { max-height: 92vh; }
+  .detail-photo { width: 88px; height: 104px; }
+}
+
+/* Avatars in admin table */
+.avatar { vertical-align: middle; }

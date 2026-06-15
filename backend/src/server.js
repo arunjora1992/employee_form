@@ -7,6 +7,11 @@ const db = require('./db');
 const auth = require('./auth');
 const authRoutes = require('./routes/auth');
 const employeeRoutes = require('./routes/employees');
+const settingsRoutes = require('./routes/settings');
+const userRoutes = require('./routes/users');
+const settings = require('./settings');
+const { seedDemoEmployees } = require('./seed');
+const { runMigrations } = require('./migrate');
 const { isEnabled: sheetsEnabled } = require('./sheets');
 
 const app = express();
@@ -21,27 +26,18 @@ app.use(cookieParser());
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/users', userRoutes);
 
-// Public shop config (used by the frontend for branding)
-app.get('/api/config', (req, res) => {
-  res.json({
-    shopName: 'Sekar & Co',
-    tagline: 'Quality is Permanent',
-    googleSheets: sheetsEnabled(),
-    contact: {
-      headOffice: {
-        address: '13/3, Gowripuram, 3rd Cross, L.G.B Back Side, Karur - 639002',
-        phones: ['04324 241796', '04324 240796', '04324 241797'],
-        email: 'sekarandcokrr@gmail.com',
-      },
-      branch: {
-        address: '1/141F, Karur to Salem By Pass Road, Near Over Bridge, Mudhalaipatti, Namakkal - 637003',
-        phones: ['94423 86796', '90920 31796', '94870 75796', '97870 76796'],
-        email: 'sekarandconkl@gmail.com',
-      },
-      emails: ['sales@sekarandco.in', 'accounts@sekarandco.in', 'info@sekarandco.in'],
-    },
-  });
+// Public shop config (used by the frontend for branding & customization)
+app.get('/api/config', async (req, res) => {
+  try {
+    const config = await settings.getConfig();
+    res.json({ ...config, googleSheets: sheetsEnabled() });
+  } catch (err) {
+    console.error('Config error:', err.message);
+    res.status(500).json({ error: 'Could not load configuration.' });
+  }
 });
 
 app.get('/api/health', async (req, res) => {
@@ -60,7 +56,21 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 app.use(express.static(PUBLIC_DIR));
 
-// SPA-ish fallback to login for unknown non-API routes
+// Clean, named page routes (no .html in the address bar)
+const PAGES = {
+  '/': 'index.html',
+  '/form': 'index.html',
+  '/login': 'login.html',
+  '/register': 'register.html',
+  '/admin': 'admin.html',
+  '/settings': 'settings.html',
+  '/users': 'users.html',
+};
+for (const [route, file] of Object.entries(PAGES)) {
+  app.get(route, (req, res) => res.sendFile(path.join(PUBLIC_DIR, file)));
+}
+
+// Fallback for unknown non-API routes -> the form (login guard handles auth)
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found.' });
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
@@ -68,7 +78,10 @@ app.get('*', (req, res) => {
 
 async function start() {
   await db.waitForDb();
+  await runMigrations();
   await auth.seedAdmin();
+  await settings.seedConfig();
+  await seedDemoEmployees();
   app.listen(PORT, () => {
     console.log(`Sekar & Co Employee Portal running on http://localhost:${PORT}`);
     console.log(`Google Sheets mirror: ${sheetsEnabled() ? 'ENABLED' : 'disabled'}`);

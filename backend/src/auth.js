@@ -47,7 +47,21 @@ function requireAuth(req, res, next) {
   }
 }
 
-/** Express middleware — requires the authenticated user to be an admin. */
+/** Roles: 'admin' (full), 'viewer' (read-only records), 'user' (fills forms). */
+const ROLES = ['admin', 'viewer', 'user'];
+
+/** Express middleware factory — requires the user to hold one of `roles`. */
+function requireRole(...roles) {
+  return (req, res, next) =>
+    requireAuth(req, res, () => {
+      if (!roles.includes(req.user.role)) {
+        return res.status(403).json({ error: 'You do not have permission for this action.' });
+      }
+      next();
+    });
+}
+
+/** Requires admin. */
 function requireAdmin(req, res, next) {
   requireAuth(req, res, () => {
     if (req.user.role !== 'admin') {
@@ -56,6 +70,9 @@ function requireAdmin(req, res, next) {
     next();
   });
 }
+
+/** Allows admin or read-only viewer (for record viewing/export). */
+const requireViewer = requireRole('admin', 'viewer');
 
 /** Seed an initial admin user from environment variables (idempotent). */
 async function seedAdmin() {
@@ -81,12 +98,15 @@ async function seedAdmin() {
 
 module.exports = {
   COOKIE_NAME,
+  ROLES,
   signToken,
   setAuthCookie,
   clearAuthCookie,
   hashPassword,
   verifyPassword,
   requireAuth,
+  requireRole,
   requireAdmin,
+  requireViewer,
   seedAdmin,
 };

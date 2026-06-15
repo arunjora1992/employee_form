@@ -11,8 +11,17 @@ CREATE TABLE IF NOT EXISTS users (
     name          TEXT        NOT NULL,
     email         TEXT        NOT NULL UNIQUE,
     password_hash TEXT        NOT NULL,
-    role          TEXT        NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+    role          TEXT        NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin', 'viewer')),
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------------
+-- Settings (key/value store for shop branding & customization)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS settings (
+    key        TEXT PRIMARY KEY,
+    value      JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ---------------------------------------------------------------------------

@@ -42,7 +42,7 @@
 
   window.logout = async function () {
     try { await api('/api/auth/logout', { method: 'POST' }); } catch {}
-    location.href = '/login.html';
+    location.href = '/login';
   };
 
   // ---- Header ----
@@ -51,16 +51,67 @@
     if (!nav) return;
     let links = '';
     if (user) {
-      links += `<a class="btn btn-sm btn-secondary" href="/">New Form</a>`;
-      if (user.role === 'admin') links += `<a class="btn btn-sm btn-secondary" href="/admin.html">Admin</a>`;
-      links += `<span class="muted" style="margin:0 6px;font-size:.85rem">${user.name}</span>`;
+      // Employees & admins can fill the form; read-only viewers cannot.
+      if (user.role === 'user' || user.role === 'admin') {
+        links += `<a class="btn btn-sm btn-secondary" href="/">New Form</a>`;
+      }
+      if (user.role === 'admin' || user.role === 'viewer') {
+        links += `<a class="btn btn-sm btn-secondary" href="/admin">Records</a>`;
+      }
+      if (user.role === 'admin') {
+        links += `<a class="btn btn-sm btn-secondary" href="/users">Users</a>`;
+        links += `<a class="btn btn-sm btn-secondary" href="/settings">Settings</a>`;
+      }
+      const roleBadge = { admin: 'Admin', viewer: 'Read-only', user: 'Employee' }[user.role] || '';
+      links += `<span class="header-user">${escapeHtml(user.name)}${roleBadge ? ` · ${roleBadge}` : ''}</span>`;
       links += `<button class="btn btn-sm btn-secondary" onclick="logout()">Logout</button>`;
     } else {
-      links += `<a class="btn btn-sm btn-secondary" href="/login.html">Login</a>`;
-      links += `<a class="btn btn-sm btn-primary" href="/register.html">Register</a>`;
+      links += `<a class="btn btn-sm btn-secondary" href="/login">Login</a>`;
+      links += `<a class="btn btn-sm btn-primary" href="/register">Register</a>`;
     }
     nav.insertAdjacentHTML('afterbegin', links);
   };
+
+  // ---- Dynamic branding (logo, name, tagline, colors, favicon) ----
+  let _configCache = null;
+  window.getConfig = async function () {
+    if (_configCache) return _configCache;
+    _configCache = await api('/api/config');
+    return _configCache;
+  };
+
+  window.applyBranding = function (cfg) {
+    if (!cfg) return;
+    // Accent + header colors
+    if (cfg.primaryColor) document.documentElement.style.setProperty('--amber', cfg.primaryColor);
+    if (cfg.headerColor) {
+      document.documentElement.style.setProperty(
+        '--header-bg',
+        `linear-gradient(135deg, ${cfg.headerColor} 0%, color-mix(in srgb, ${cfg.headerColor} 78%, #ffffff) 100%)`
+      );
+    }
+    // Brand logo + name + tagline
+    const logoEl = document.querySelector('.brand .logo');
+    if (logoEl) {
+      if (cfg.logoPath) {
+        logoEl.innerHTML = `<img src="${escapeHtml(cfg.logoPath)}" alt="logo" style="width:100%;height:100%;object-fit:contain;border-radius:8px" />`;
+        logoEl.style.background = 'transparent';
+        logoEl.style.boxShadow = 'none';
+      } else if (cfg.logoEmoji) {
+        logoEl.textContent = cfg.logoEmoji;
+      }
+    }
+    const nameEl = document.querySelector('.brand h1');
+    if (nameEl && cfg.shopName) nameEl.textContent = cfg.shopName.toUpperCase();
+    // Page tab title prefix
+    if (cfg.shopName) document.title = document.title.replace(/Sekar & Co/gi, cfg.shopName);
+  };
+
+  // Auto-apply branding on every page that includes common.js
+  window.initBranding = async function () {
+    try { applyBranding(await getConfig()); } catch { /* keep static fallback */ }
+  };
+  initBranding();
 
   window.escapeHtml = function (s) {
     if (s === null || s === undefined) return '';

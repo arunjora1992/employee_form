@@ -2,12 +2,13 @@
 
 (async function () {
   const user = await getCurrentUser();
-  if (!user) { location.href = '/login.html'; return; }
-  if (user.role !== 'admin') {
-    document.body.innerHTML = '<div class="container"><div class="card alert alert-error">Administrator access required.</div></div>';
+  if (!user) { location.href = '/login'; return; }
+  if (user.role !== 'admin' && user.role !== 'viewer') {
+    document.body.innerHTML = '<div class="container"><div class="card alert alert-error">You do not have permission to view records.</div></div>';
     return;
   }
   renderHeader(user);
+  const canDelete = user.role === 'admin';
 
   const rowsEl = document.getElementById('rows');
   const msg = document.getElementById('msg');
@@ -18,6 +19,25 @@
   function fmtDate(d) {
     if (!d) return '—';
     try { return new Date(d).toLocaleString(); } catch { return d; }
+  }
+
+  function initials(name) {
+    return String(name || '?').trim().split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase();
+  }
+
+  function avatar(e, size = 38) {
+    const s = `width:${size}px;height:${size}px;border-radius:50%;flex:0 0 auto;`;
+    if (e.photo_path) {
+      return `<img class="avatar" src="${escapeHtml(e.photo_path)}" alt="" style="${s}object-fit:cover;border:1px solid var(--border)" />`;
+    }
+    return `<span class="avatar avatar-fallback" style="${s}display:grid;place-items:center;background:var(--blue);color:#fff;font-size:${Math.round(size/2.6)}px;font-weight:700">${escapeHtml(initials(e.full_name))}</span>`;
+  }
+
+  // Trigger a same-origin authenticated download via a temporary anchor.
+  function download(url) {
+    const a = document.createElement('a');
+    a.href = url; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
   }
 
   async function load(search = '') {
@@ -33,7 +53,12 @@
       }
       rowsEl.innerHTML = cache.map((e) => `
         <tr>
-          <td><strong>${escapeHtml(e.full_name)}</strong></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              ${avatar(e)}
+              <strong>${escapeHtml(e.full_name)}</strong>
+            </div>
+          </td>
           <td>${escapeHtml(e.designation) || '—'}</td>
           <td>${escapeHtml(e.division) || '—'}</td>
           <td>${escapeHtml(e.personal_phone) || '—'}</td>
@@ -41,7 +66,7 @@
           <td class="muted">${fmtDate(e.created_at)}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-sm btn-secondary" data-view="${e.id}">View</button>
-            <button class="btn btn-sm btn-danger" data-del="${e.id}">Delete</button>
+            ${canDelete ? `<button class="btn btn-sm btn-danger" data-del="${e.id}">Delete</button>` : ''}
           </td>
         </tr>`).join('');
     } catch (err) {
@@ -67,6 +92,11 @@
 
   const kv = (k, v) => `<div class="kv"><div class="k">${escapeHtml(k)}</div><div class="v">${v === null || v === undefined || v === '' ? '—' : escapeHtml(v)}</div></div>`;
   const yn = (b) => (b ? 'Yes' : 'No');
+  const ymd = (v) => {
+    if (!v) return '';
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? v : d.toISOString().slice(0, 10);
+  };
 
   function showDetail(id) {
     const e = cache.find((x) => x.id === id);
@@ -74,18 +104,22 @@
     const modal = document.getElementById('modal');
     const photo = e.photo_path
       ? `<img class="detail-photo" src="${escapeHtml(e.photo_path)}" alt="Photo" />`
-      : '';
+      : `<div class="detail-photo" style="display:grid;place-items:center;background:var(--blue);color:#fff;font-size:40px;font-weight:700">${escapeHtml(initials(e.full_name))}</div>`;
     modal.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
         <div>
           <h3 style="margin:0">${escapeHtml(e.full_name)}</h3>
           <p class="muted" style="margin:2px 0">${escapeHtml(e.designation) || ''} ${e.division ? '· ' + escapeHtml(e.division) : ''}</p>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-secondary" data-dl-csv="${e.id}">⬇ CSV</button>
+            <button class="btn btn-sm btn-secondary" data-dl-pdf="${e.id}">⬇ PDF</button>
+          </div>
         </div>
         ${photo}
       </div>
       <div class="detail-grid">
         <div class="sub">Personal Information</div>
-        ${kv('Date of Birth', e.date_of_birth)}
+        ${kv('Date of Birth', ymd(e.date_of_birth))}
         ${kv('Blood Group', e.blood_group)}
         ${kv('Gender', e.gender)}
         ${kv('Marital Status', e.marital_status)}
@@ -151,6 +185,8 @@
       </div>`;
     document.getElementById('modalBackdrop').classList.add('open');
     document.getElementById('closeModal').onclick = closeModal;
+    modal.querySelector(`[data-dl-csv="${id}"]`).onclick = () => download(`/api/employees/${id}/export/csv`);
+    modal.querySelector(`[data-dl-pdf="${id}"]`).onclick = () => download(`/api/employees/${id}/export/pdf`);
   }
 
   function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }
@@ -165,6 +201,13 @@
     t = setTimeout(() => load(searchEl.value.trim()), 300);
   });
   document.getElementById('refreshBtn').addEventListener('click', () => load(searchEl.value.trim()));
+
+  function exportUrl(kind) {
+    const s = searchEl.value.trim();
+    return `/api/employees/export/${kind}` + (s ? `?search=${encodeURIComponent(s)}` : '');
+  }
+  document.getElementById('exportCsv').addEventListener('click', (e) => { e.preventDefault(); download(exportUrl('csv')); });
+  document.getElementById('exportPdf').addEventListener('click', (e) => { e.preventDefault(); download(exportUrl('pdf')); });
 
   load();
 })();

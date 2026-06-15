@@ -3,7 +3,9 @@
 (async function () {
   // Require login
   const user = await getCurrentUser();
-  if (!user) { location.href = '/login.html'; return; }
+  if (!user) { location.href = '/login'; return; }
+  // Read-only viewers cannot submit forms — send them to the records view.
+  if (user.role === 'viewer') { location.href = '/admin'; return; }
   renderHeader(user);
   loadFooter();
 
@@ -57,26 +59,24 @@
 
   async function loadFooter() {
     try {
-      const cfg = await api('/api/config');
-      const c = cfg.contact;
+      const cfg = await getConfig();
+      const c = cfg.contact || {};
+      const office = (o) => o ? `
+        <div>
+          <h4>${escapeHtml(o.label || '')}</h4>
+          <p>${escapeHtml(o.address || '')}</p>
+          ${o.phones && o.phones.length ? `<p>📞 ${o.phones.map(escapeHtml).join(', ')}</p>` : ''}
+          ${o.email ? `<p>✉️ ${escapeHtml(o.email)}</p>` : ''}
+        </div>` : '';
       document.getElementById('footer').innerHTML = `
         <div>
           <h4>${escapeHtml(cfg.shopName)}</h4>
           <p class="muted">${escapeHtml(cfg.tagline)}</p>
-          <p class="muted">Electricals · Plumbing/Pipes · Paints · Building Construction Materials</p>
+          <p class="muted">${escapeHtml(cfg.footerNote || '')}</p>
+          ${c.emails && c.emails.length ? `<p class="muted">${c.emails.map(escapeHtml).join(' · ')}</p>` : ''}
         </div>
-        <div>
-          <h4>Head Office — Karur</h4>
-          <p>${escapeHtml(c.headOffice.address)}</p>
-          <p>📞 ${c.headOffice.phones.map(escapeHtml).join(', ')}</p>
-          <p>✉️ ${escapeHtml(c.headOffice.email)}</p>
-        </div>
-        <div>
-          <h4>Branch — Namakkal</h4>
-          <p>${escapeHtml(c.branch.address)}</p>
-          <p>📞 ${c.branch.phones.map(escapeHtml).join(', ')}</p>
-          <p>✉️ ${escapeHtml(c.branch.email)}</p>
-        </div>`;
+        ${office(c.headOffice)}
+        ${office(c.branch)}`;
     } catch { /* footer optional */ }
   }
 })();

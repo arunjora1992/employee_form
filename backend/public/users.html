@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users · Sekar & Co Employee Portal</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <span class="logo">⚡</span>
+        <div>
+          <h1>SEKAR &amp; CO</h1>
+          <p class="tagline">Admin · User Management</p>
+        </div>
+      </a>
+      <div class="header-spacer"></div>
+      <nav class="header-nav" id="headerNav">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="msg"></div>
+
+    <!-- Create user -->
+    <div class="card form-section">
+      <div class="section-title"><span class="num">＋</span> Create User</div>
+      <form id="createForm">
+        <div class="grid">
+          <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" name="name" required /></div>
+          <div class="field"><label>Email <span class="req">*</span></label><input type="email" name="email" required /></div>
+          <div class="field"><label>Password <span class="req">*</span></label><input type="password" name="password" minlength="6" required /></div>
+          <div class="field">
+            <label>Privilege / Role <span class="req">*</span></label>
+            <select name="role" required>
+              <option value="admin">Admin — full access</option>
+              <option value="viewer" selected>Read-only — view records only</option>
+              <option value="user">Employee — fills the form</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="createBtn">Create User</button>
+      </form>
+    </div>
+
+    <!-- User list -->
+    <div class="card">
+      <h2 style="margin-top:0">Accounts</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr>
+          </thead>
+          <tbody id="rows"><tr><td colspan="5" class="center muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/users.js"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin · Employee Records · Sekar & Co</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
@@ -29,6 +30,8 @@
       <div class="toolbar">
         <input type="text" id="search" placeholder="Search name, email, designation, division…" />
         <button class="btn btn-sm btn-secondary" id="refreshBtn">Refresh</button>
+        <a class="btn btn-sm btn-secondary" id="exportCsv" href="#" download>⬇ All CSV</a>
+        <a class="btn btn-sm btn-secondary" id="exportPdf" href="#">⬇ All PDF</a>
         <div class="spacer"></div>
         <span class="stat-badge" id="countBadge">0 records</span>
       </div>
