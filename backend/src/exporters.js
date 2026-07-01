@@ -1,6 +1,8 @@
 /**
- * CSV and PDF exporters for employee records (individual & bulk).
+ * CSV and PDF exporters for employee records (individual & bulk & ID card).
  */
+const path = require('path');
+const fs = require('fs');
 const PDFDocument = require('pdfkit');
 
 // Ordered field list grouped by the form's 8 sections.
@@ -166,8 +168,140 @@ function streamListPDF(res, records, shopName) {
   doc.end();
 }
 
+// ---- ID Card ----------------------------------------------------------------
+
+/** Short, human-friendly employee code derived from the UUID (e.g. SC-1A2B3C4D). */
+function employeeCode(employee, shopName) {
+  const prefix = String(shopName || 'SC')
+    .replace(/[^a-zA-Z]/g, '')
+    .slice(0, 2)
+    .toUpperCase() || 'SC';
+  const hex = String(employee.id || '').replace(/[^a-fA-F0-9]/g, '').slice(0, 8).toUpperCase();
+  return `${prefix}-${hex || '00000000'}`;
+}
+
+/** Resolve an uploaded /uploads/<file> path to an on-disk absolute path (or null). */
+function resolveUpload(uploadDir, webPath) {
+  if (!uploadDir || !webPath) return null;
+  const abs = path.join(uploadDir, path.basename(webPath));
+  return fs.existsSync(abs) ? abs : null;
+}
+
+/**
+ * Stream a portrait ID-card-format PDF (CR80 proportions) to `res`.
+ * Includes company branding, employee photo, name, role and key details.
+ */
+function streamEmployeeIDCard(res, employee, cfg, uploadDir) {
+  const shopName = cfg.shopName || 'Sekar & Co';
+  const header = cfg.headerColor || '#1b3a5b';
+  const accent = cfg.primaryColor || '#f5a623';
+
+  // Card canvas: portrait CR80 aspect (54 × 85.6 mm), scaled up for legibility.
+  const W = 216, H = 342;
+  const doc = new PDFDocument({ size: [W, H], margin: 0 });
+  doc.pipe(res);
+
+  // Card background + subtle border
+  doc.rect(0, 0, W, H).fill('#ffffff');
+  doc.rect(1, 1, W - 2, H - 2).lineWidth(1).strokeColor('#d8dee8').stroke();
+
+  // Header band
+  const headerH = 66;
+  doc.rect(0, 0, W, headerH).fill(header);
+
+  // Logo: uploaded image if available, else an accent circle with the initial
+  const logoAbs = resolveUpload(uploadDir, cfg.logoPath);
+  const logoD = 38, logoX = 14, logoY = (headerH - logoD) / 2;
+  if (logoAbs) {
+    doc.save();
+    doc.circle(logoX + logoD / 2, logoY + logoD / 2, logoD / 2).clip();
+    try { doc.image(logoAbs, logoX, logoY, { cover: [logoD, logoD], align: 'center', valign: 'center' }); }
+    catch { /* ignore unreadable logo */ }
+    doc.restore();
+  } else {
+    doc.circle(logoX + logoD / 2, logoY + logoD / 2, logoD / 2).fill(accent);
+    doc.fillColor(header).fontSize(20).font('Helvetica-Bold')
+      .text((shopName[0] || 'S').toUpperCase(), logoX, logoY + 9, { width: logoD, align: 'center' });
+  }
+
+  // Company name + tagline
+  const txtX = logoX + logoD + 10;
+  doc.fillColor('#ffffff').fontSize(13).font('Helvetica-Bold')
+    .text(shopName, txtX, 16, { width: W - txtX - 12 });
+  if (cfg.tagline) {
+    doc.fillColor(accent).fontSize(7).font('Helvetica-Oblique')
+      .text(cfg.tagline, txtX, doc.y + 1, { width: W - txtX - 12 });
+  }
+
+  // Photo frame
+  const pw = 94, ph = 112, px = (W - pw) / 2, py = headerH + 16;
+  const photoAbs = resolveUpload(uploadDir, employee.photo_path);
+  doc.rect(px - 2, py - 2, pw + 4, ph + 4).lineWidth(2).strokeColor(accent).stroke();
+  if (photoAbs) {
+    doc.save();
+    doc.rect(px, py, pw, ph).clip();
+    try { doc.image(photoAbs, px, py, { cover: [pw, ph], align: 'center', valign: 'center' }); }
+    catch { doc.rect(px, py, pw, ph).fill(header); }
+    doc.restore();
+  } else {
+    doc.rect(px, py, pw, ph).fill(header);
+    const inits = String(employee.full_name || '?').trim().split(/\s+/).slice(0, 2)
+      .map((w) => w[0] || '').join('').toUpperCase();
+    doc.fillColor('#ffffff').fontSize(34).font('Helvetica-Bold')
+      .text(inits, px, py + ph / 2 - 22, { width: pw, align: 'center' });
+  }
+
+  // Name + role
+  let y = py + ph + 12;
+  doc.fillColor(header).fontSize(15).font('Helvetica-Bold')
+    .text(employee.full_name || 'Employee', 10, y, { width: W - 20, align: 'center' });
+  y = doc.y + 1;
+  const role = [employee.designation, employee.division].filter(Boolean).join(' · ');
+  if (role) {
+    doc.fillColor('#5b6b7a').fontSize(8.5).font('Helvetica')
+      .text(role, 10, y, { width: W - 20, align: 'center' });
+    y = doc.y;
+  }
+
+  // Divider
+  y += 8;
+  doc.moveTo(16, y).lineTo(W - 16, y).lineWidth(1).strokeColor(accent).stroke();
+  y += 8;
+
+  // Detail rows
+  const rows = [
+    ['ID No', employeeCode(employee, shopName)],
+    ['Blood Group', employee.blood_group],
+    ['Phone', employee.personal_phone],
+    ['Date of Birth', employee.date_of_birth ? ymd(employee.date_of_birth) : null],
+    ['Emergency', [employee.emergency_contact_person, employee.emergency_contact_no]
+      .filter(Boolean).join(' · ')],
+  ];
+  const labelW = 74;
+  for (const [label, value] of rows) {
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('#8794a3')
+      .text(label.toUpperCase(), 16, y, { width: labelW });
+    doc.font('Helvetica').fillColor('#1b2733')
+      .text(value ? String(value) : '—', 16 + labelW, y, { width: W - 32 - labelW });
+    y = Math.max(doc.y, y + 12) + 2;
+  }
+
+  // Footer band
+  const footerH = 26;
+  doc.rect(0, H - footerH, W, footerH).fill(accent);
+  doc.fillColor(header).fontSize(7.5).font('Helvetica-Bold')
+    .text('EMPLOYEE IDENTITY CARD', 12, H - footerH + 5, { width: W - 24, align: 'center' });
+  const office = cfg.contact && cfg.contact.headOffice && cfg.contact.headOffice.label;
+  if (office) {
+    doc.fillColor(header).fontSize(6).font('Helvetica')
+      .text(office, 12, H - footerH + 15, { width: W - 24, align: 'center' });
+  }
+
+  doc.end();
+}
+
 function safeFileName(name) {
   return String(name || 'employee').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60);
 }
 
-module.exports = { toCSV, streamEmployeePDF, streamListPDF, safeFileName };
+module.exports = { toCSV, streamEmployeePDF, streamListPDF, streamEmployeeIDCard, safeFileName };

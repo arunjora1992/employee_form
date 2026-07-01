@@ -180,6 +180,22 @@ router.get('/:id/export/pdf', auth.requireViewer, async (req, res) => {
   }
 });
 
+// ID card (admin) — printable portrait PDF in ID-card format ----------------
+router.get('/:id/idcard', auth.requireViewer, async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM employees WHERE id = $1', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Employee not found.' });
+    const cfg = await settings.getConfig();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition',
+      `attachment; filename="${exporters.safeFileName(rows[0].full_name)}-id-card.pdf"`);
+    exporters.streamEmployeeIDCard(res, rows[0], cfg, UPLOAD_DIR);
+  } catch (err) {
+    console.error('ID card export error:', err.message);
+    if (!res.headersSent) res.status(500).json({ error: 'Could not generate ID card.' });
+  }
+});
+
 // Single employee (admin) ---------------------------------------------------
 router.get('/:id', auth.requireViewer, async (req, res) => {
   try {

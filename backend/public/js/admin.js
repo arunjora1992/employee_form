@@ -66,6 +66,7 @@
           <td class="muted">${fmtDate(e.created_at)}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-sm btn-secondary" data-view="${e.id}">View</button>
+            <button class="btn btn-sm btn-primary" data-idcard="${e.id}" title="Download ID card">🪪 ID</button>
             ${canDelete ? `<button class="btn btn-sm btn-danger" data-del="${e.id}">Delete</button>` : ''}
           </td>
         </tr>`).join('');
@@ -77,8 +78,10 @@
   // Event delegation for View / Delete
   rowsEl.addEventListener('click', async (e) => {
     const viewId = e.target.getAttribute('data-view');
+    const idcardId = e.target.getAttribute('data-idcard');
     const delId = e.target.getAttribute('data-del');
     if (viewId) return showDetail(viewId);
+    if (idcardId) return download(`/api/employees/${idcardId}/idcard`);
     if (delId) {
       if (!confirm('Delete this employee record? This cannot be undone.')) return;
       try {
@@ -113,6 +116,7 @@
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-sm btn-secondary" data-dl-csv="${e.id}">⬇ CSV</button>
             <button class="btn btn-sm btn-secondary" data-dl-pdf="${e.id}">⬇ PDF</button>
+            <button class="btn btn-sm btn-primary" data-dl-id="${e.id}">🪪 ID Card</button>
           </div>
         </div>
         ${photo}
@@ -187,6 +191,7 @@
     document.getElementById('closeModal').onclick = closeModal;
     modal.querySelector(`[data-dl-csv="${id}"]`).onclick = () => download(`/api/employees/${id}/export/csv`);
     modal.querySelector(`[data-dl-pdf="${id}"]`).onclick = () => download(`/api/employees/${id}/export/pdf`);
+    modal.querySelector(`[data-dl-id="${id}"]`).onclick = () => download(`/api/employees/${id}/idcard`);
   }
 
   function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }

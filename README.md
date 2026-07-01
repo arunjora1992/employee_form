@@ -28,6 +28,7 @@ search and review every record.
 - 🗄️ **Dual storage** — every submission is written to PostgreSQL **and** appended to a Google Sheet (when configured).
 - 👨‍💼 **Admin dashboard** — searchable table with profile-picture avatars, full-record detail view, photo preview, delete.
 - ⬇️ **Export to CSV & PDF** — both **bulk** (all/filtered records) and **individual** (single record), respecting the active search filter.
+- 🪪 **Download ID card** — one-click printable **employee ID card** (portrait CR80 format PDF) per employee, with photo, name, role, ID number, blood group, phone & emergency contact. Card branding (logo, company name, tagline, colours, footer office) comes from the **Settings** page, so it is fully customizable independent of employee info.
 - 🎨 **Customization / Settings page** — admins can change the **logo** (image upload or emoji), **shop name**, **tagline**, **accent & header colors**, **footer note**, and all **contact details** (head office, branch, emails). Changes apply live across the portal.
 - 🖼️ **Browser tab icon** (PNG favicon) included.
 - 🔗 **Clean named URLs** — `/login`, `/register`, `/admin`, `/users`, `/settings` (no `.html`).
@@ -141,6 +142,7 @@ each submission into a Google Sheet:
 | GET    | `/api/employees/export/pdf`       | admin, viewer | Bulk PDF (honors `?search=`)             |
 | GET    | `/api/employees/:id/export/csv`   | admin, viewer | Individual record CSV                    |
 | GET    | `/api/employees/:id/export/pdf`   | admin, viewer | Individual record PDF                    |
+| GET    | `/api/employees/:id/idcard`       | admin, viewer | Printable employee **ID card** (PDF)     |
 | GET    | `/api/users`                      | admin         | List user accounts                       |
 | POST   | `/api/users`                      | admin         | Create a user with a role                |
 | PATCH  | `/api/users/:id`                  | admin         | Change role / reset password             |
