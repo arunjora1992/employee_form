@@ -289,8 +289,9 @@ function streamEmployeeIDCard(res, employee, cfg, uploadDir) {
   // Footer band
   const footerH = 26;
   doc.rect(0, H - footerH, W, footerH).fill(accent);
+  const footerCaption = (cfg.idCardFooter || 'Employee Identity Card').toUpperCase();
   doc.fillColor(header).fontSize(7.5).font('Helvetica-Bold')
-    .text('EMPLOYEE IDENTITY CARD', 12, H - footerH + 5, { width: W - 24, align: 'center' });
+    .text(footerCaption, 12, H - footerH + 5, { width: W - 24, align: 'center' });
   const office = cfg.contact && cfg.contact.headOffice && cfg.contact.headOffice.label;
   if (office) {
     doc.fillColor(header).fontSize(6).font('Helvetica')

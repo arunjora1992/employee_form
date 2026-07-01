@@ -16,6 +16,7 @@ const DEFAULT_CONFIG = {
   primaryColor: '#f5a623',  // electric amber accent
   headerColor: '#1b3a5b',   // deep blue header
   footerNote: 'Electricals · Plumbing/Pipes · Paints · Building Construction Materials',
+  idCardFooter: 'Employee Identity Card', // caption on the ID card footer band
   contact: {
     headOffice: {
       label: 'Head Office — Karur',

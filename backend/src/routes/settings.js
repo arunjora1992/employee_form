@@ -36,7 +36,7 @@ router.put('/', auth.requireAdmin, async (req, res) => {
   try {
     const b = req.body || {};
     const patch = {};
-    const strFields = ['shopName', 'tagline', 'logoEmoji', 'primaryColor', 'headerColor', 'footerNote'];
+    const strFields = ['shopName', 'tagline', 'logoEmoji', 'primaryColor', 'headerColor', 'footerNote', 'idCardFooter'];
     for (const f of strFields) if (typeof b[f] === 'string') patch[f] = b[f].trim();
 
     if (b.contact && typeof b.contact === 'object') {

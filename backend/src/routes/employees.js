@@ -113,6 +113,47 @@ router.post('/', auth.requireRole('admin', 'user'), upload.single('photo'), asyn
   }
 });
 
+// Update an existing employee record (admin) --------------------------------
+router.put('/:id', auth.requireAdmin, upload.single('photo'), async (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.full_name || !String(b.full_name).trim()) {
+      return res.status(400).json({ error: 'Full Name is required.' });
+    }
+    const { rows: existing } = await db.query('SELECT * FROM employees WHERE id = $1', [req.params.id]);
+    if (!existing.length) return res.status(404).json({ error: 'Employee not found.' });
+
+    // Field values (buildValues appends photo_path at the end — drop it here).
+    const fieldValues = buildValues(b, null).slice(0, FIELDS.length);
+    const sets = FIELDS.map((c, i) => `${c} = $${i + 1}`);
+    const values = [...fieldValues];
+
+    // Replace photo only when a new file is uploaded; otherwise keep the old one.
+    if (req.file) {
+      values.push(`/uploads/${req.file.filename}`);
+      sets.push(`photo_path = $${values.length}`);
+    }
+    sets.push('updated_at = now()');
+    values.push(req.params.id);
+
+    const { rows } = await db.query(
+      `UPDATE employees SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING *`,
+      values
+    );
+
+    // Best-effort cleanup of the replaced photo file.
+    if (req.file && existing[0].photo_path) {
+      const old = path.join(UPLOAD_DIR, path.basename(existing[0].photo_path));
+      fs.unlink(old, () => {});
+    }
+
+    res.json({ id: rows[0].id, employee: rows[0] });
+  } catch (err) {
+    console.error('Update employee error:', err.message);
+    res.status(500).json({ error: err.message || 'Could not update employee record.' });
+  }
+});
+
 // List employees (admin) ----------------------------------------------------
 router.get('/', auth.requireViewer, async (req, res) => {
   try {

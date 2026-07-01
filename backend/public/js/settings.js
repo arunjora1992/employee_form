@@ -30,6 +30,7 @@
     setVal('shopName', config.shopName);
     setVal('tagline', config.tagline);
     setVal('footerNote', config.footerNote);
+    setVal('idCardFooter', config.idCardFooter);
     setVal('primaryColor', config.primaryColor || '#f5a623');
     setVal('headerColor', config.headerColor || '#1b3a5b');
     setVal('logoEmoji', config.logoEmoji);
@@ -56,6 +57,7 @@
         shopName: form.shopName.value,
         tagline: form.tagline.value,
         footerNote: form.footerNote.value,
+        idCardFooter: form.idCardFooter.value,
         primaryColor: form.primaryColor.value,
         headerColor: form.headerColor.value,
         logoEmoji: form.logoEmoji.value,

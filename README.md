@@ -28,7 +28,8 @@ search and review every record.
 - 🗄️ **Dual storage** — every submission is written to PostgreSQL **and** appended to a Google Sheet (when configured).
 - 👨‍💼 **Admin dashboard** — searchable table with profile-picture avatars, full-record detail view, photo preview, delete.
 - ⬇️ **Export to CSV & PDF** — both **bulk** (all/filtered records) and **individual** (single record), respecting the active search filter.
-- 🪪 **Download ID card** — one-click printable **employee ID card** (portrait CR80 format PDF) per employee, with photo, name, role, ID number, blood group, phone & emergency contact. Card branding (logo, company name, tagline, colours, footer office) comes from the **Settings** page, so it is fully customizable independent of employee info.
+- 🪪 **Download ID card** — one-click printable **employee ID card** per employee in **PDF and JPG** formats, with photo, name, role, ID number, blood group, phone & emergency contact. Card branding (logo, company name, tagline, colours, and an editable **footer caption**) comes from the **Settings** page, so it is fully customizable independent of employee info. (PDF is rendered server-side; JPG is rendered client-side on a canvas.)
+- ✏️ **Edit existing records** — admins can open any record in the pre-filled form (`/form?id=…`) and save changes, including replacing the photo, via `PUT /api/employees/:id`.
 - 🎨 **Customization / Settings page** — admins can change the **logo** (image upload or emoji), **shop name**, **tagline**, **accent & header colors**, **footer note**, and all **contact details** (head office, branch, emails). Changes apply live across the portal.
 - 🖼️ **Browser tab icon** (PNG favicon) included.
 - 🔗 **Clean named URLs** — `/login`, `/register`, `/admin`, `/users`, `/settings` (no `.html`).
@@ -143,6 +144,7 @@ each submission into a Google Sheet:
 | GET    | `/api/employees/:id/export/csv`   | admin, viewer | Individual record CSV                    |
 | GET    | `/api/employees/:id/export/pdf`   | admin, viewer | Individual record PDF                    |
 | GET    | `/api/employees/:id/idcard`       | admin, viewer | Printable employee **ID card** (PDF)     |
+| PUT    | `/api/employees/:id`              | admin         | Update a record (optional photo replace) |
 | GET    | `/api/users`                      | admin         | List user accounts                       |
 | POST   | `/api/users`                      | admin         | Create a user with a role                |
 | PATCH  | `/api/users/:id`                  | admin         | Change role / reset password             |

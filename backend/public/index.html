@@ -26,8 +26,8 @@
 
   <main class="container">
     <div class="card">
-      <h2 style="margin-top:0">Employee Details Form</h2>
-      <p class="muted">Please complete all applicable sections. Fields marked <span style="color:var(--danger)">*</span> are required.</p>
+      <h2 style="margin-top:0" id="formTitle">Employee Details Form</h2>
+      <p class="muted" id="formIntro">Please complete all applicable sections. Fields marked <span style="color:var(--danger)">*</span> are required.</p>
     </div>
 
     <div id="msg"></div>
@@ -83,7 +83,8 @@
           <div class="field">
             <label>Passport Size Photograph</label>
             <input type="file" name="photo" accept="image/*" />
-            <span class="hint">JPG / PNG / WEBP, max 5 MB.</span>
+            <span class="hint" id="photoHint">JPG / PNG / WEBP, max 5 MB.</span>
+            <div id="currentPhoto"></div>
           </div>
         </div>
       </div>

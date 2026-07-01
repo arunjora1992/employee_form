@@ -66,7 +66,9 @@
           <td class="muted">${fmtDate(e.created_at)}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-sm btn-secondary" data-view="${e.id}">View</button>
-            <button class="btn btn-sm btn-primary" data-idcard="${e.id}" title="Download ID card">🪪 ID</button>
+            <button class="btn btn-sm btn-primary" data-idcard="${e.id}" title="Download ID card (PDF)">🪪 PDF</button>
+            <button class="btn btn-sm btn-primary" data-idcardjpg="${e.id}" title="Download ID card (JPG)">🖼 JPG</button>
+            ${canDelete ? `<a class="btn btn-sm btn-secondary" href="/form?id=${e.id}">Edit</a>` : ''}
             ${canDelete ? `<button class="btn btn-sm btn-danger" data-del="${e.id}">Delete</button>` : ''}
           </td>
         </tr>`).join('');
@@ -79,9 +81,15 @@
   rowsEl.addEventListener('click', async (e) => {
     const viewId = e.target.getAttribute('data-view');
     const idcardId = e.target.getAttribute('data-idcard');
+    const idcardJpgId = e.target.getAttribute('data-idcardjpg');
     const delId = e.target.getAttribute('data-del');
     if (viewId) return showDetail(viewId);
     if (idcardId) return download(`/api/employees/${idcardId}/idcard`);
+    if (idcardJpgId) {
+      const emp = cache.find((x) => x.id === idcardJpgId);
+      if (emp) downloadIdCardImage(emp, 'jpg');
+      return;
+    }
     if (delId) {
       if (!confirm('Delete this employee record? This cannot be undone.')) return;
       try {
@@ -116,7 +124,9 @@
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-sm btn-secondary" data-dl-csv="${e.id}">⬇ CSV</button>
             <button class="btn btn-sm btn-secondary" data-dl-pdf="${e.id}">⬇ PDF</button>
-            <button class="btn btn-sm btn-primary" data-dl-id="${e.id}">🪪 ID Card</button>
+            <button class="btn btn-sm btn-primary" data-dl-id="${e.id}">🪪 ID Card (PDF)</button>
+            <button class="btn btn-sm btn-primary" data-dl-idjpg="${e.id}">🖼 ID Card (JPG)</button>
+            ${canDelete ? `<a class="btn btn-sm btn-secondary" href="/form?id=${e.id}">✎ Edit</a>` : ''}
           </div>
         </div>
         ${photo}
@@ -192,6 +202,7 @@
     modal.querySelector(`[data-dl-csv="${id}"]`).onclick = () => download(`/api/employees/${id}/export/csv`);
     modal.querySelector(`[data-dl-pdf="${id}"]`).onclick = () => download(`/api/employees/${id}/export/pdf`);
     modal.querySelector(`[data-dl-id="${id}"]`).onclick = () => download(`/api/employees/${id}/idcard`);
+    modal.querySelector(`[data-dl-idjpg="${id}"]`).onclick = () => downloadIdCardImage(e, 'jpg');
   }
 
   function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }
