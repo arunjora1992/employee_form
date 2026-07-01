@@ -34,6 +34,14 @@
     sync();
   });
 
+  const DATE_FIELDS = new Set(['date_of_birth', 'declaration_date']);
+
+  function ymd(v) {
+    if (!v) return '';
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  }
+
   // ---- Edit mode: prefill the form from an existing record ----
   if (editId) {
     document.title = 'Edit Employee · Sekar & Co';
@@ -53,14 +61,6 @@
       return;
     }
   }
-
-  function ymd(v) {
-    if (!v) return '';
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
-  }
-
-  const DATE_FIELDS = new Set(['date_of_birth', 'declaration_date']);
 
   function prefill(e) {
     Object.keys(e || {}).forEach((key) => {
